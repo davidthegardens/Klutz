@@ -7,6 +7,10 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+*.csv
+*.json
+*.pkl
+*.parquet
 test.py
 .Python
 build/
