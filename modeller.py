@@ -8,14 +8,15 @@ from joblib import dump
 import pandas as pd
 import polars as pl
 import fake_code_generator
+from sklearn.metrics import confusion_matrix,classification_report
 
 # Assuming you have a DataFrame `df` with 'text' and 'category' columns
-df = pl.read_parquet('datafiles/data_with_code655.parquet')
-df=df.fill_nan(None)
-df=df.drop_nulls()
-df_chars=pl.read_parquet('opcode_to_char.parquet')
-charlist=df_chars['characters'].to_list()
-characters="".join(charlist)
+# df = pl.read_parquet('datafiles/data_with_code655.parquet')
+# df=df.fill_nan(None)
+# df=df.drop_nulls()
+# df_chars=pl.read_parquet('opcode_to_char.parquet')
+# charlist=df_chars['characters'].to_list()
+# characters="".join(charlist)
 
 def addFake(df,characters,entries):
     col=[]
@@ -28,23 +29,42 @@ def addFake(df,characters,entries):
     new_df = pl.concat([df, new_df], rechunk=True)
     return new_df
 
-df=addFake(df,characters,200000)
-df.write_parquet('data_with_fake_code.parquet')
+# df=addFake(df,characters,200000)
+# df.write_parquet('data_with_fake_code.parquet')
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(df['merged_opcodes'], df['category'], random_state=1)
 
-print(y_train.value_counts())
+
+# counts=y_train.value_counts()
+# print(len(counts['category'].to_list()))
+# counts=counts.filter(pl.col('counts')>5)
+# categories=counts['category'].to_list()
+# df=df.filter(pl.col('category').is_in(categories))
+# df.write_parquet('ready_training_data.parquet')
+
+
 # Create a pipeline that first transforms the text data into a bag-of-words
 # feature matrix, then applies SMOTE for minority oversampling, and finally
 # trains a Naive Bayes classifier
-pipeline = make_pipeline_imb(
-    CountVectorizer(),
-    SMOTE(random_state=42),
-    MultinomialNB()
-)
+def loadTrain():
+    df = pl.read_parquet('ready_training_data.parquet')
+    X_train, X_test, y_train, y_test = train_test_split(df['merged_opcodes'], df['category'], random_state=1)
 
-# Train the model
-pipeline.fit(X_train, y_train)
+    pipeline = make_pipeline_imb(
+        CountVectorizer(),
+        SMOTE(random_state=42,k_neighbors=5),
+        MultinomialNB()
+    )
 
-# Save the model to a file
-dump(pipeline, 'text_classification_model.joblib')
+    # Train the model
+    pipeline.fit(X_train, y_train)
+
+    # Save the model to a file
+    dump(pipeline, 'text_classification_model.joblib')
+    predictions = pipeline.predict(X_test)
+    report = classification_report(y_test, predictions)
+    print(report)
+
+loadTrain()
+# from joblib import load
+# pipeline = load('text_classification_model.joblib')
+# predictions = pipeline.predict(X_test)
