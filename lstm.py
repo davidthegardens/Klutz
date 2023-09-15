@@ -9,9 +9,9 @@ import polars as pl
 from sklearn.utils.class_weight import compute_sample_weight
 import numpy as np
 
-df = pl.read_parquet('ready_training_data.parquet')
+df = pl.read_parquet('ready_training_data_other.parquet')
 
-X_train, X_test, y_train, y_test = train_test_split(df['merged_opcodes'], df['category'], random_state=1)
+X_train, X_test, y_train, y_test = train_test_split(df['merged_opcodes'], df['category'], random_state=1,stratify=df['category'])
 
 # Assuming `X_train`, `X_test`, `y_train`, `y_test` are your data
 
@@ -53,7 +53,8 @@ model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accur
 # Train model
 class_weights = compute_sample_weight(class_weight='balanced', y=y_train_int)
 class_weight_dict = dict(enumerate(class_weights))
-model.fit(X_train_seq, y_train_onehot, epochs=10, class_weight=class_weight_dict)
+model.fit(X_train_seq, y_train_onehot, epochs=1, class_weight=class_weight_dict)
+model.save('contract_categorizer_lstm.h5')
 
 # Make predictions
 predictions = model.predict_classes(X_test_seq)

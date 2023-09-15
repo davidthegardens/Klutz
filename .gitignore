@@ -5,7 +5,9 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.joblib
+venv/bin/
+venv3.11/bin/
 # Distribution / packaging
 *.csv
 *.json
