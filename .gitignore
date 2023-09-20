@@ -9,6 +9,7 @@ __pycache__/
 venv/bin/
 venv3.11/bin/
 # Distribution / packaging
+*.h5
 *.csv
 *.json
 *.pkl
